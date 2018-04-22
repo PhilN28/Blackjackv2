@@ -1,0 +1,386 @@
+/**
+ * @author Phillip Nguyen (10am), Aditya Mehta (10am), Phillip Phan (10am), Christopher Maltusch (9am)
+ *
+ * 
+ */
+
+import java.util.*;
+public class Table {
+	
+	private Scanner scan = new Scanner(System.in);
+	private Random rand = new Random();
+	private String namePlayer1; 
+	private String namePlayer2; 
+	private Player player1; 
+	private Player player2;
+	private Player dealer;
+	private ArrayList<Player> players = new ArrayList<Player>();
+	private boolean pass;
+	
+	public Table() {
+		
+		opening();
+		createDealer();
+		addPlayers();
+		game();
+	}
+
+	//Welcoming statement
+	public void opening() {
+		System.out.println("Welcome to the Big Baller Casino (BBC)!");
+		System.out.println("You must be 21 and over to play.");
+		System.out.println();
+	}
+	
+	//Creates player objects
+	public void addPlayers() {
+		
+		while (!pass)
+		{
+			System.out.println("Player 1 please enter your name >");
+			namePlayer1 = scan.next();
+			System.out.println("Player 1 please enter your age >");
+			int agePlayer1 = scan.nextInt();
+			Player player1 = new Player(namePlayer1, agePlayer1);
+			players.add(player1);
+			
+			System.out.println("Player 2 please enter your name >");
+			namePlayer2 = scan.next();
+			System.out.println("Player 2 please enter your age >");
+			int agePlayer2 = scan.nextInt();
+			Player player2 = new Player(namePlayer2, agePlayer2);
+			players.add(player2);
+			
+				if (!ageCheck())
+				{
+					players.clear();
+				}
+		}
+
+	}
+	
+	//Creates the dealer, which is the CPU player
+	public void createDealer() {
+		String cpuName = "Dealer";
+		dealer = new Player(cpuName, 99);
+		dealer.setMoney(1000);
+		players.add(dealer);
+	}
+	
+	//Checks age of the player, must be 21+
+	public boolean ageCheck() {
+		for (Player aPlayer : players)
+		{
+			if (!aPlayer.checkAge(aPlayer.getAge()))
+			{
+				System.out.println(aPlayer.getName() + " is not of age - please return when you and your guests are 21.");
+				System.out.println("");
+				pass = false;
+				return pass;
+			}
+		}
+		pass = true; 
+		return pass;
+	}
+
+	//Creates a card
+	public Card createCard() {
+		Deck aDeck = new Deck();
+		Card card = aDeck.gimmeACard();	
+		return card;
+	}
+	
+	//Add card to player hand, checks if ace
+	public void deal(Player thisPlayer)
+	{
+		Card thisCard = createCard();
+		//checkAce(thisCard);
+		
+		if (thisCard.getFace().equals("Ace"))
+		{
+			if (!thisPlayer.getName().equals("Dealer"))
+			{
+				System.out.println(thisPlayer.getName() + ", you have been dealt an ace!");
+				System.out.println("Do you want the ace to equal 1 or 11? (1/11)");
+				int aceRsp = scan.nextInt();
+				
+				if (aceRsp == 1)
+				{
+					thisCard.setFaceValue(1);
+				}
+				
+				if (aceRsp == 11)
+				{
+					thisCard.setFaceValue(11);
+				}
+			}
+			if(thisPlayer.getName().equals("Dealer"))
+			{
+				thisCard.setFaceValue(1);
+			}
+		}
+		
+		thisPlayer.addCard(thisCard);
+		thisCard.printInfo();
+		System.out.println(" (" + thisCard.getFaceValue() + ")" + " has been added to " +  thisPlayer.getName()+ "'s hand.");
+	}
+	
+	
+	//this method will take player bets and add the sum to get the potential winning 
+	public int bet(Player thisPlayer)
+	{
+		int winnings = 0;
+		for (Player aPlayer : players)
+		{
+			if (!(aPlayer.getName().equals("Dealer")))
+			{
+				System.out.println(aPlayer.getName() + " how much would you like to bet?");
+				int bet = scan.nextInt();
+				aPlayer.setMoney(aPlayer.getMoney() - bet);
+				aPlayer.setBet(bet);
+				winnings = winnings + bet;
+				System.out.println();
+			}
+		}
+		return winnings;
+	}
+	
+	//this method will set the bets for the players 
+	public void setBet()
+	{
+		for (Player aPlayer : players)
+		{
+			{
+				bet(aPlayer);
+			}
+			return;
+		}
+	}
+	
+	public int winnings() {
+		int sum = 0;
+		for (Player aPlayer : players)
+		{
+			sum = sum + aPlayer.getBet();
+		}
+		return sum;
+	}
+	
+	public int draw(Player thisPlayer) {
+		int bet = 0;
+		for (Player aPlayer : players)
+		{
+			if (thisPlayer.getName().equals(aPlayer.getName()))
+			{
+				bet = aPlayer.getBet();
+			}
+		}
+		
+		return bet; 
+	}
+	
+	//Part of game
+	public void hitOrStay() {
+		String rsp = null;
+		boolean finish = false;
+		
+		for (Player aPlayer : players)
+		{
+			if (!aPlayer.getName().equals("Dealer"))
+			{
+				System.out.println(aPlayer.getName() + ", your score is " + aPlayer.getPoints() + ". Would you like to hit or stay? (h/s)");
+				rsp = scan.next();
+					while (rsp.equals("h") && !finish)
+					{											
+						if (aPlayer.getPoints() < 21)
+						{
+							deal(aPlayer);
+							aPlayer.printHandAndScore(aPlayer);
+							aPlayer.evaluateHand();
+							aPlayer.setBust(false);
+							
+							if (aPlayer.getPoints() > 21)
+							{
+								aPlayer.setBust(true);
+								break;
+							}
+							
+							System.out.println("Hit or stay? (h/s)");
+							rsp = scan.next();
+							System.out.println();
+						}						
+					}
+					
+					if (rsp.equals("s"))
+					{
+						continue;
+					}
+			}
+		}
+	}
+	
+	//Dealer plays until he busts/wins
+	public void dealer() {
+		if (checkBust())
+		{
+			return;
+		}
+		Player thisPlayer = null;
+		//finding the score the dealer has to beat
+		int maxScore = 0;
+		for (Player aPlayer : players)
+		{
+			if (aPlayer.getPoints() > maxScore && !aPlayer.isBust())
+			{
+				thisPlayer = aPlayer;
+				maxScore = aPlayer.getPoints();
+			}
+		}
+		
+		System.out.println();
+		System.out.println("The dealer must beat " + thisPlayer.getName() + "'s score " + "(" + thisPlayer.getPoints() + ")" + " without busting in order to win!");
+		System.out.println();
+		
+		while(dealer.getPoints() < 21 || dealer.getPoints() < maxScore)
+		{
+				deal(dealer);
+				System.out.println("Dealer's score: " + dealer.getPoints());
+				
+				if (dealer.getPoints() > 21)
+				{
+					System.out.println("The dealer has busted - " + thisPlayer.getName() + " wins!");
+					thisPlayer.setWins(thisPlayer.getWins()+1);
+					thisPlayer.setMoney(thisPlayer.getMoney() + winnings());
+					dealer.setMoney(dealer.getMoney() - draw(thisPlayer));
+					break;
+				}
+				
+				if (dealer.getPoints() == maxScore)
+				{
+					System.out.println("Draw - the dealer has tied with, " + thisPlayer.getName() + "!");
+					thisPlayer.setMoney(thisPlayer.getMoney() + draw(thisPlayer));
+					break;
+				}
+				
+				if (dealer.getPoints() == 21)
+				{
+					System.out.println("The dealer has blackjack!"  + thisPlayer.getName() + " loses!");
+					dealer.setWins(dealer.getWins()+1);
+					dealer.setMoney(winnings());
+					break;
+				}
+				
+				if (dealer.getPoints() < 21 && dealer.getPoints() > maxScore)
+				{
+					System.out.println("You lose - the dealer has beat " + thisPlayer.getName() + "!");
+					dealer.setWins(dealer.getWins()+1);
+					dealer.setMoney(winnings());
+					break;
+				}
+		}
+		System.out.println();
+	}
+		
+	//Game
+	public void game()
+	{
+		String gameRsp = "n";
+		boolean gameFinish = false;
+		
+		
+		while (!gameFinish && gameRsp.equals("n"))
+		{
+			setBet();
+			
+			deal(dealer); 
+			
+			for (Player aPlayer : players)
+			{
+				if (!(aPlayer.getName().equals("Dealer")))
+				{
+					deal(aPlayer);
+					deal(aPlayer);
+				}
+				
+				System.out.println();
+				aPlayer.printHandAndScore(aPlayer);
+				aPlayer.evaluateHand();
+			}
+			
+			hitOrStay();
+			
+			dealer();
+			
+			System.out.println("Are you done playing? (y/n)");
+			gameRsp = scan.next();
+			
+				if (gameRsp.equals("y"))
+				{
+					gameFinish = true;
+					System.out.println("We hope you enjoyed your vi$it!");
+					results();
+				}
+				
+				if (gameRsp.equals("n"))
+				{
+					System.out.println("Get ready for the next round.");
+					reset();
+					System.out.println();
+				}
+		}
+	}
+	
+	//checks if players have busted 
+	public boolean checkBust()
+	{
+		for (int i = 0; i < players.size(); i++)
+		{
+			if(players.get(1).getPoints() > 21 && players.get(2).getPoints() > 21)
+			{
+				System.out.println("Both " + players.get(1).getName() + " and " + players.get(2).getName() + " have busted! The dealer wins!");
+				System.out.println();
+				return true; 
+			}
+		}
+		return false;
+	}
+	
+	public void reset() {
+		for (Player aPlayer : players)
+		{
+			aPlayer.setPoints(0);
+			aPlayer.clearHand();
+			
+			if (!aPlayer.getName().equals("Dealer"))
+			{
+				aPlayer.setBet(0);
+			}
+		}
+	}
+	
+	public boolean natural() {
+		for (Player aPlayer : players)
+		{
+			if (aPlayer.getPoints() == 21)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void results() {
+		System.out.println("$$$$$$$$$$$$$$$$$$$ RESULTS $$$$$$$$$$$$$$$$$$$$");
+		System.out.println("Player" + "    " + "Rounds Won" + "   " + "Money");
+		for (Player aPlayer : players)
+		{
+			System.out.println(aPlayer.getName() + "        " + aPlayer.getWins() + "          " + aPlayer.getMoney());
+		}
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Table blackjack = new Table();
+	}
+
+}
