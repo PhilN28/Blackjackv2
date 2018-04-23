@@ -5,6 +5,8 @@
  */
 
 import java.util.*;
+import java.lang.Thread;
+
 public class Table {
 	
 	private Scanner scan = new Scanner(System.in);
@@ -16,6 +18,7 @@ public class Table {
 	private Player dealer;
 	private ArrayList<Player> players = new ArrayList<Player>();
 	private boolean pass;
+	private Deck aDeck = new Deck();
 	
 	public Table() {
 		
@@ -85,7 +88,6 @@ public class Table {
 
 	//Creates a card
 	public Card createCard() {
-		Deck aDeck = new Deck();
 		Card card = aDeck.gimmeACard();	
 		return card;
 	}
@@ -127,7 +129,7 @@ public class Table {
 	
 	
 	//this method will take player bets and add the sum to get the potential winning 
-	public int bet(Player thisPlayer)
+	public void bet(Player thisPlayer)
 	{
 		int winnings = 0;
 		for (Player aPlayer : players)
@@ -142,7 +144,6 @@ public class Table {
 				System.out.println();
 			}
 		}
-		return winnings;
 	}
 	
 	//this method will set the bets for the players 
@@ -157,6 +158,8 @@ public class Table {
 		}
 	}
 	
+	
+	//calculates the sum of the bets
 	public int winnings() {
 		int sum = 0;
 		for (Player aPlayer : players)
@@ -179,7 +182,7 @@ public class Table {
 		return bet; 
 	}
 	
-	//Part of game
+	//User hits or stays 
 	public void hitOrStay() {
 		String rsp = null;
 		boolean finish = false;
@@ -245,6 +248,13 @@ public class Table {
 		{
 				deal(dealer);
 				System.out.println("Dealer's score: " + dealer.getPoints());
+				System.out.println("Dealer is drawing a card. Please wait.");
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 				if (dealer.getPoints() > 21)
 				{
@@ -281,7 +291,7 @@ public class Table {
 		System.out.println();
 	}
 		
-	//Game
+	//Contains methods that make blackjack work
 	public void game()
 	{
 		String gameRsp = "n";
@@ -345,6 +355,7 @@ public class Table {
 		return false;
 	}
 	
+	//If the user prompts to play on to the next round, this method clears their hands and sets bets to 0
 	public void reset() {
 		for (Player aPlayer : players)
 		{
@@ -358,24 +369,19 @@ public class Table {
 		}
 	}
 	
-	public boolean natural() {
-		for (Player aPlayer : players)
-		{
-			if (aPlayer.getPoints() == 21)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
 	
+	//Prints the results after the player ends the game 
 	public void results() {
-		System.out.println("$$$$$$$$$$$$$$$$$$$ RESULTS $$$$$$$$$$$$$$$$$$$$");
-		System.out.println("Player" + "    " + "Rounds Won" + "   " + "Money");
+		
+		System.out.println("*-*-*-*-*-*-* Results *-*-*-*-*-*-*-*-*");
+		System.out.println("Players     Rounds Won      Money");
+		
 		for (Player aPlayer : players)
 		{
-			System.out.println(aPlayer.getName() + "        " + aPlayer.getWins() + "          " + aPlayer.getMoney());
+			System.out.println(aPlayer.getName() + "            " + aPlayer.getWins() + "           " + aPlayer.getMoney());
 		}
+		
+		System.out.println("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
 	}
 	
 	public static void main(String[] args) {
