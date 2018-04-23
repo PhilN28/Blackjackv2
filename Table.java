@@ -129,7 +129,25 @@ public class Table {
 	
 	
 	//this method will take player bets and add the sum to get the potential winning 
-	public void bet(Player thisPlayer)
+//	public void bet(Player thisPlayer)
+//	{
+//		int winnings = 0;
+//		for (Player aPlayer : players)
+//		{
+//			if (!(aPlayer.getName().equals("Dealer")))
+//			{
+//				System.out.println(aPlayer.getName() + " how much would you like to bet?");
+//				int bet = scan.nextInt();
+//				aPlayer.setMoney(aPlayer.getMoney() - bet);
+//				aPlayer.setBet(bet);
+//				winnings = winnings + bet;
+//				System.out.println();
+//			}
+//		}
+//	}
+	
+	//this method will set the bets for the players 
+	public void setBet()
 	{
 		int winnings = 0;
 		for (Player aPlayer : players)
@@ -143,18 +161,6 @@ public class Table {
 				winnings = winnings + bet;
 				System.out.println();
 			}
-		}
-	}
-	
-	//this method will set the bets for the players 
-	public void setBet()
-	{
-		for (Player aPlayer : players)
-		{
-			{
-				bet(aPlayer);
-			}
-			return;
 		}
 	}
 	
@@ -276,7 +282,7 @@ public class Table {
 				{
 					System.out.println("The dealer has blackjack!"  + thisPlayer.getName() + " loses!");
 					dealer.setWins(dealer.getWins()+1);
-					dealer.setMoney(winnings());
+					dealer.setMoney(dealer.getMoney() + winnings());
 					break;
 				}
 				
@@ -284,7 +290,7 @@ public class Table {
 				{
 					System.out.println("You lose - the dealer has beat " + thisPlayer.getName() + "!");
 					dealer.setWins(dealer.getWins()+1);
-					dealer.setMoney(winnings());
+					dealer.setMoney(dealer.getMoney() + winnings());
 					break;
 				}
 		}
