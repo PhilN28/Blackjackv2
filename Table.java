@@ -17,6 +17,7 @@ public class Table {
 	private Player player2;
 	private Player dealer;
 	private ArrayList<Player> players = new ArrayList<Player>();
+	private ArrayList<Integer> highScores = new ArrayList<Integer>();
 	private boolean pass;
 	private Deck aDeck = new Deck();
 	
@@ -26,11 +27,12 @@ public class Table {
 		createDealer();
 		addPlayers();
 		game();
+		
 	}
 
 	//Welcoming statement
 	public void opening() {
-		System.out.println("Welcome to the Big Baller Casino (BBC)!");
+		System.out.println("Welcome to the Big Baller Casino!");
 		System.out.println("You must be 21 and over to play.");
 		System.out.println();
 	}
@@ -125,6 +127,7 @@ public class Table {
 		thisPlayer.addCard(thisCard);
 		thisCard.printInfo();
 		System.out.println(" (" + thisCard.getFaceValue() + ")" + " has been added to " +  thisPlayer.getName()+ "'s hand.");
+		System.out.println();
 	}
 	
 	
@@ -159,7 +162,6 @@ public class Table {
 				aPlayer.setMoney(aPlayer.getMoney() - bet);
 				aPlayer.setBet(bet);
 				winnings = winnings + bet;
-				System.out.println();
 			}
 		}
 	}
@@ -237,64 +239,118 @@ public class Table {
 		Player thisPlayer = null;
 		//finding the score the dealer has to beat
 		int maxScore = 0;
+		boolean playerTie = false;
+		
 		for (Player aPlayer : players)
 		{
 			if (aPlayer.getPoints() > maxScore && !aPlayer.isBust())
 			{
 				thisPlayer = aPlayer;
 				maxScore = aPlayer.getPoints();
+				
+				if (players.get(1).getPoints() == maxScore && players.get(2).getPoints() == maxScore)
+				{
+					playerTie = true; 
+				}
+				
 			}
 		}
 		
 		System.out.println();
-		System.out.println("The dealer must beat " + thisPlayer.getName() + "'s score " + "(" + thisPlayer.getPoints() + ")" + " without busting in order to win!");
-		System.out.println();
-		
-		while(dealer.getPoints() < 21 || dealer.getPoints() < maxScore)
+		if (playerTie)
 		{
-				deal(dealer);
-				System.out.println("Dealer's score: " + dealer.getPoints());
-				System.out.println("Dealer is drawing a card. Please wait.");
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				if (dealer.getPoints() > 21)
-				{
-					System.out.println("The dealer has busted - " + thisPlayer.getName() + " wins!");
-					thisPlayer.setWins(thisPlayer.getWins()+1);
-					thisPlayer.setMoney(thisPlayer.getMoney() + winnings());
-					dealer.setMoney(dealer.getMoney() - draw(thisPlayer));
-					break;
-				}
-				
-				if (dealer.getPoints() == maxScore)
-				{
-					System.out.println("Draw - the dealer has tied with, " + thisPlayer.getName() + "!");
-					thisPlayer.setMoney(thisPlayer.getMoney() + draw(thisPlayer));
-					break;
-				}
-				
-				if (dealer.getPoints() == 21)
-				{
-					System.out.println("The dealer has blackjack!"  + thisPlayer.getName() + " loses!");
-					dealer.setWins(dealer.getWins()+1);
-					dealer.setMoney(dealer.getMoney() + winnings());
-					break;
-				}
-				
-				if (dealer.getPoints() < 21 && dealer.getPoints() > maxScore)
-				{
-					System.out.println("You lose - the dealer has beat " + thisPlayer.getName() + "!");
-					dealer.setWins(dealer.getWins()+1);
-					dealer.setMoney(dealer.getMoney() + winnings());
-					break;
-				}
+			System.out.println("The dealer must beat " + players.get(1).getName() + " and " + players.get(2).getName() + "'s score " + "(" + maxScore + ")" + " without busting in order to win!");
+		}
+		if (!playerTie)
+		{
+			System.out.println("The dealer must beat " + thisPlayer.getName() + "'s score " + "(" + thisPlayer.getPoints() + ")" + " without busting in order to win!");
 		}
 		System.out.println();
+		
+		while(dealer.getPoints() <= 21 || dealer.getPoints() <= maxScore)
+		{
+				System.out.println("Card is being dealt. Please wait.");
+				
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					deal(dealer);
+					
+					System.out.println("Dealer's score: " + dealer.getPoints());
+					System.out.println();
+					if (dealer.getPoints() > 21)
+					{
+						//dealer loses 
+						if (playerTie)
+							{
+								System.out.println("The dealer has busted! " + players.get(1).getName() + " and " + players.get(2).getName() + " have beat the dealer!");
+								players.get(1).setMoney(players.get(1).getMoney() + ((draw(players.get(1))*2)));
+								players.get(1).setWins(players.get(1).getWins()+1);
+								players.get(2).setMoney(players.get(2).getMoney() + ((draw(players.get(2))*2)));
+								players.get(2).setWins(players.get(2).getWins()+1);
+								dealer.setMoney(dealer.getMoney() - winnings());
+								break;
+
+							}
+
+						else if (dealer.getPoints() > maxScore)
+							{
+								System.out.println("The dealer has busted - " + thisPlayer.getName() + " has beat the dealer!");
+								thisPlayer.setWins(thisPlayer.getWins()+1);
+								thisPlayer.setMoney(thisPlayer.getMoney() + (draw(thisPlayer)*2));
+								dealer.setMoney(dealer.getMoney() - draw(thisPlayer));
+								break;
+							}
+					}
+					
+					//dealer wins/ties
+					if (dealer.getPoints() <= 21)
+					{
+						if (dealer.getPoints() == maxScore)
+						{
+							if (!playerTie)
+							{
+								System.out.println("The dealer has tied with " + thisPlayer.getName() + "!");
+								thisPlayer.setMoney(thisPlayer.getMoney() + draw(thisPlayer));
+								break;
+							}
+							if (playerTie)
+							{
+								System.out.println("The dealer has tied with " + players.get(1).getName() + " and " + players.get(2).getName() + " !");
+								players.get(1).setMoney(players.get(1).getMoney() + draw(players.get(1)));
+								players.get(2).setMoney(players.get(2).getMoney() + draw(players.get(2)));
+								break;
+							}
+						}
+						
+						if (dealer.getPoints() > maxScore)
+							{
+								if (!playerTie)
+								{
+									System.out.println("The dealer has beat " + thisPlayer.getName() + "!");
+									thisPlayer.setMoney(thisPlayer.getMoney() - draw(thisPlayer));
+									dealer.setWins(dealer.getWins()+1);
+									dealer.setMoney(dealer.getMoney() + winnings());
+									thisPlayer.setMoney(thisPlayer.getMoney() - draw(thisPlayer));
+									break;
+								}
+								else if (playerTie)
+								{
+									System.out.println("The dealer has beat " + players.get(1).getName() + " and " + players.get(2).getName() + " !");
+									players.get(1).setMoney(players.get(1).getMoney() - ((draw(players.get(1)))));
+									players.get(2).setMoney(players.get(2).getMoney() - ((draw(players.get(2)))));
+									dealer.setWins(dealer.getWins()+1);
+									dealer.setMoney(dealer.getMoney() + winnings());
+									break;
+								}
+							}
+					}
+			System.out.println();
+		}
 	}
 		
 	//Contains methods that make blackjack work
@@ -308,13 +364,41 @@ public class Table {
 		{
 			setBet();
 			
+			System.out.println("Card is being dealt. Please wait.");
+			
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			deal(dealer); 
 			
 			for (Player aPlayer : players)
 			{
 				if (!(aPlayer.getName().equals("Dealer")))
 				{
+					System.out.println("Card is being dealt. Please wait.");
+					
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 					deal(aPlayer);
+					
+					System.out.println("Card is being dealt. Please wait.");
+					
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 					deal(aPlayer);
 				}
 				
